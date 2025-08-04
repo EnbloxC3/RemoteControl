@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <title>Uzaktan Kontrol Paneli</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      @media (pointer: coarse) {
+        html,
+        body,
+        * {
+          cursor: none !important;
+          -webkit-tap-highlight-color: transparent !important;
+        }
+      }
+
+      :root {
+        --primary-color: #007bff;
+        --primary-color-dark: #0056b3;
+        --secondary-color: #6c757d;
+        --background-color: #f5f5f5;
+        --text-color: #212529;
+      }
+
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        padding: 20px;
+        max-width: 1000px;
+        margin: auto;
+        background-color: var(--background-color);
+        color: var(--text-color);
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+      }
+
+      ::selection {
+        background-color: var(--primary-color);
+        color: rgb(0, 0, 0);
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar {
+        width: 2px;
+        height: 2px;
+      }
+
+      :focus {
+        outline: var(--primary-color) solid 1px;
+      }
+
+      body {
+        -ms-user-select: none;
+        -moz-user-select: none;
+        -khtml-user-select: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #f5f5f5;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+      #login,
+      #dashboard {
+        display: none;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        width: 100%;
+      }
+      button {
+        margin: 10px 0;
+        padding: 12px;
+        width: 100%;
+        border: none;
+        border-radius: 4px;
+        background-color: var(--primary-color);
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      button:hover {
+        background-color: var(--primary-color-dark);
+      }
+      input,
+      textarea {
+        position: relative;
+        overflow: visible;
+        max-width: 100%;
+        box-sizing: border-box;
+        user-select: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+      }
+      select {
+        padding: 5px 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        user-select: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        background-color: #fff;
+      }
+      input[type="text"],
+      input[type="password"],
+      textarea {
+        width: 100%;
+        padding: 10px;
+        margin: 5px 0;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+        user-select: text;
+        -webkit-user-select: text;
+        -khtml-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+        transition: border-color 0.2s;
+      }
+      input[type="text"]:focus,
+      input[type="password"]:focus,
+      textarea:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 5px var(--primary-color);
+      }
+      .error {
+        color: #dc3545;
+        margin: 5px 0;
+        font-size: 14px;
+        &::selection {
+          background-color: #dc3545;
+          color: rgb(0, 0, 0);
+        }
+      }
+      .success {
+        color: #28a745;
+        margin: 5px 0;
+        font-size: 14px;
+        &::selection {
+          background-color: #28a745;
+          color: rgb(0, 0, 0);
+        }
+      }
+      h2,
+      h3 {
+        color: #333;
+        margin-top: 20px;
+      }
+      .section {
+        margin-bottom: 20px;
+        padding: 15px;
+        border: 1px solid #eee;
+        border-radius: 4px;
+      }
+      #console {
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+        margin-top: 20px;
+        max-height: 200px;
+        overflow-y: auto;
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+      }
+
+      #console .content {
+        position: relative;
+        max-height: 200px;
+        overflow: auto;
+        user-select: text;
+        -webkit-user-select: text;
+        -khtml-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+      }
+
+      #setAbsolute {
+        position: absolute;
+        bottom: 10px;
+        right: 25px;
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        background: #e9ecef;
+        color: #495057;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        z-index: 1000;
+        cursor: default;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        user-select: none;
+      }
+
+      #console.draggable {
+        position: fixed !important;
+        overflow: auto;
+        cursor: move;
+        min-width: 200px;
+        min-height: 100px;
+        max-width: 800px;
+        max-height: 400px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+      }
+
+      #console.draggable .content {
+        user-select: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+      }
+
+      #console.draggable p {
+        pointer-events: none;
+      }
+
+      [disabled] {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transition: opacity 0.2s;
+      }
+
+      .modal {
+        position: fixed;
+        z-index: 10;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal.hidden {
+        display: none;
+      }
+
+      .modal-content {
+        background-color: #fff;
+        padding: 24px;
+        border-radius: 12px;
+        width: 600px;
+        max-width: 95%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        font-family: "Segoe UI", sans-serif;
+      }
+
+      .close {
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        position: absolute;
+        right: 0;
+        top: 0;
+        margin-right: 3%;
+        margin-top: 3%;
+        color: white;
+        mix-blend-mode: difference;
+        z-index: 2;
+      }
+
+      .info-section {
+        margin-top: 20px;
+        border-top: 1px solid #ccc;
+        padding-top: 10px;
+      }
+
+      .info-section h3 {
+        margin-bottom: 10px;
+        color: #2e2e2e;
+      }
+
+      .info-section div p {
+        margin: 2px 0;
+        font-size: 14px;
+      }
+
+      .output {
+        border: 1px solid #ddd;
+        padding: 10px;
+        border-radius: 4px;
+        background-color: #f8f9fa;
+        min-height: 100px;
+        font-family: "Courier New", Courier, monospace;
+        white-space: pre-wrap;
+        user-select: text;
+        -webkit-user-select: text;
+        -khtml-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+      }
+
+      .loaderico {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        animation: spin 2s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .footer {
+        margin-top: 30px;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
+        font-size: 12px;
+        color: #999;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        padding: 15px;
+        text-align: center;
+        z-index: 2;
+      }
+
+      .footer span {
+        font-weight: 600;
+        color: #666;
+      }
+
+      .footer a {
+        color: var(--primary-color);
+        text-decoration: none;
+      }
+
+      .footer a:hover {
+        text-decoration: underline;
+      }
+
+      .footer a:visited {
+        color: var(--primary-color);
+      }
+
+      @media (max-width: 1035px) {
+        body {
+          flex-direction: column;
+          align-items: center;
+        }
+        #console {
+          bottom: 10px;
+          right: 10px;
+          width: 100%;
+          max-width: 50%;
+          max-height: 50px;
+          position: fixed;
+          overflow-y: auto;
+          background: #f8f9fa;
+          padding: 10px;
+          border-radius: 4px;
+          border: 1px solid #ddd;
+          z-index: 1000;
+        }
+        #dashboard,
+        #login {
+          width: 100%;
+        }
+        #setAbsolute {
+          display: none !important;
+        }
+        .footer {
+          text-align: left;
+          padding: 5px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="login">
+      <h3>Token ile Giriş</h3>
+      <input
+        type="password"
+        id="tokenInput"
+        placeholder="Token giriniz"
+        required
+      />
+      <button onclick="checkToken()">Giriş Yap</button>
+      <p id="loginMsg" class="error"></p>
+    </div>
+
+    <div id="dashboard">
+      <h2>Kontrol Paneli</h2>
+
+      <div class="section">
+        <h3>Sistem Kontrolü</h3>
+        <button onclick="sendCmd('shutdown')">Bilgisayarı Kapat</button>
+        <button onclick="sendCmd('reboot')">Bilgisayarı Yeniden Başlat</button>
+      </div>
+
+      <div class="section">
+        <h3>Popup Mesaj Göster</h3>
+        <textarea
+          id="popupMsg"
+          rows="3"
+          placeholder="Mesaj yazınız..."
+        ></textarea>
+        <select name="popupType" id="popupType">
+          <option value="info">Bilgi</option>
+          <option value="warning">Uyarı</option>
+          <option value="error">Hata</option>
+        </select>
+        <label for="popupOntop"
+          >Üstte Göster
+          <input type="checkbox" id="popupOntop" checked />
+        </label>
+        <button
+          onclick="sendPopup(document.getElementById('popupType').value, document.getElementById('popupOntop').checked)"
+        >
+          Mesaj Gönder
+        </button>
+      </div>
+
+      <div class="section">
+        <h3>Dosya Oluştur</h3>
+        <input type="text" id="filePath" placeholder="Dosya yolu" required />
+        <input type="text" id="fileName" placeholder="Dosya adı" required />
+        <textarea
+          id="fileContent"
+          rows="3"
+          placeholder="Dosya içeriği"
+        ></textarea>
+        <button onclick="sendCreateFile()">Dosya Oluştur</button>
+      </div>
+
+      <div class="section">
+        <h3>Komut</h3>
+        <input
+          type="text"
+          id="commandInput"
+          placeholder="Komut giriniz"
+          onkeypress="if (event.key === 'Enter') { runCommand(document.getElementById('commandInput').value); }"
+        />
+        <button
+          onclick="runCommand(document.getElementById('commandInput').value)"
+        >
+          Gönder
+        </button>
+        <div class="output" id="commandOutput"></div>
+      </div>
+      <div class="section">
+        <h3>Cihaz Bilgisi</h3>
+        <button onclick="getDeviceInfo()">Cihaz Bilgilerini Al</button>
+        <div id="deviceInfoModal" class="modal hidden">
+          <div class="modal-content">
+            <span class="close" onclick="closeDeviceInfoModal()">&times;</span>
+            <h2>Cihaz Bilgileri</h2>
+
+            <div class="info-section">
+              <h3>Sistem</h3>
+              <div id="systemInfo"></div>
+            </div>
+
+            <div class="info-section">
+              <h3>Donanım</h3>
+              <div id="hardwareInfo"></div>
+            </div>
+
+            <div class="info-section">
+              <h3>Disk & Bellek</h3>
+              <div id="storageInfo"></div>
+            </div>
+
+            <div class="info-section">
+              <h3>Python</h3>
+              <div id="pythonInfo"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Sunucu</h3>
+        <button
+          onclick="stopServer();"
+          id="stopServerBtn"
+          style="background-color: red"
+        >
+          Servisi Durdur
+        </button>
+        <button onclick="restartServer();" id="restartServerBtn">
+          Yeniden Başlat
+        </button>
+      </div>
+
+      <div class="section">
+        <h3>Oturum</h3>
+        <button
+          onclick="logout(); showSuccess('Oturum kapatıldı.');"
+          style="background-color: red"
+        >
+          Çıkış Yap
+        </button>
+      </div>
+    </div>
+    <div id="console">
+      <div class="content"></div>
+      <button id="setAbsolute" onclick="setConsoleAbsolute()">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="#495057"
+        >
+          <rect
+            x="3"
+            y="5"
+            width="18"
+            height="14"
+            rx="2"
+            ry="2"
+            stroke="#495057"
+            stroke-width="2"
+            fill="none"
+          />
+          <path
+            d="M12 2v8"
+            stroke="#495057"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+          <path
+            d="M9 7l3 3 3-3"
+            fill="none"
+            stroke="#495057"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <script>
+      if (!window.fetch) {
+        console.error("Fetch API not supported. Please use a modern browser.");
+        alert(
+          "Tarayıcınız fetch API desteği sunmuyor. Lütfen modern bir tarayıcı kullanın."
+        );
+        logConsole(
+          "Fetch API not supported. Please use a modern browser.",
+          true
+        );
+        window.location.href = "https://www.google.com/chrome/";
+        throw new Error("Fetch API not supported");
+      }
+
+      if (
+        !window.navigator.onLine ||
+        !window.setTimeout ||
+        !window.clearTimeout ||
+        !window.setInterval ||
+        !window.clearInterval ||
+        !window.alert ||
+        !window.location
+      ) {
+        console.error("Your browser is not supported.");
+        alert(
+          "Tarayıcınız temel özellikleri desteklemiyor. Lütfen modern bir tarayıcı kullanın."
+        );
+        window.location.href = "https://www.google.com/chrome/";
+        throw new Error("Your browser is not supported.");
+      }
+
+      window.onoffline = () => {
+        if (!navigator.onLine) {
+          clearInterval(sessionTokenChecker);
+          console.error(
+            "You are offline. Please check your internet connection."
+          );
+          showAlert(
+            "Çevrimdışı görünüyorsunuz. Lütfen internet bağlantınızı kontrol edin."
+          );
+        }
+      };
+
+      window.ononline = () => {
+        if (navigator.onLine) {
+          sessionTokenChecker = setInterval(() => {
+            fetch(`/check_token?`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            })
+              .then((res) => {
+                if (res.status === 403) {
+                  logConsole("Terminated", true);
+                  showAlert("Oturum tokeni geçersiz veya süresi dolmuş!");
+                  document.getElementById("dashboard").style.display = "none";
+                  document.getElementById("login").style.display = "block";
+                  token = null;
+                  clearTimeout(sessionTokenChecker);
+                  return;
+                } else if (res.status === 404) {
+                  logConsole("Session not found", true);
+                  showAlert("Oturum bulunamadı!");
+                  document.getElementById("dashboard").style.display = "none";
+                  document.getElementById("login").style.display = "block";
+                  token = null;
+                  clearTimeout(sessionTokenChecker);
+                  return;
+                }
+              })
+              .catch((err) => {
+                if (navigator.onLine) {
+                  logConsole("Token check failed: " + err.message, true);
+                  logConsole("You are online, session terminated", true);
+                  showAlert("Sunucu kapatıldı Oturum kapatılıyor.");
+                  document.getElementById("dashboard").style.display = "none";
+                  document.getElementById("login").style.display = "none";
+                  token = null;
+                  clearTimeout(sessionTokenChecker);
+                  return;
+                } else if (!navigator.onLine) {
+                  logConsole("Token check failed: " + err.message, true);
+                }
+              });
+          }, 10000);
+          showSuccess("Çevrim içisiniz.");
+        }
+      };
+
+      if (
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1" ||
+        window.location.hostname === "::1"
+      ) {
+        console.warn(
+          "You are running this on localhost. This is not secure for production use."
+        );
+        alert(
+          "Bu panel localhost üzerinde çalışıyor, buna yanlızca sunucunun çalıştığı cihazda çalışabilir (diğer cihazlar 192.168.x.x ile erişebilir)"
+        );
+        showAlert(
+          `Bu paneli "${window.location.hostname}" (localhost) üzerinde çalıştırıyorsunuz.`
+        );
+      } else {
+        console.log("Running on a remote server.");
+      }
+
+      let token = null;
+      let sessionTokenChecker;
+
+      if (sessionStorage.getItem("token")) {
+        token = sessionStorage.getItem("token");
+        login(token);
+      } else {
+        token = null;
+      }
+
+      function logout() {
+        token = null;
+        sessionStorage.removeItem("token");
+        clearInterval(sessionTokenChecker);
+        document.getElementById("dashboard").style.display = "none";
+        document.getElementById("login").style.display = "block";
+        logConsole("Logout successful!");
+      }
+
+      function checkToken() {
+        const input = document.getElementById("tokenInput");
+        if (!input.value.trim()) {
+          document.getElementById("loginMsg").textContent = "Token boş olamaz!";
+          return;
+        }
+        login(input.value);
+      }
+
+      function login(tokenInput) {
+        const loginMsg = document.getElementById("loginMsg");
+        const loginDiv = document.getElementById("login");
+        const dashboardDiv = document.getElementById("dashboard");
+
+        function logoutCleanup() {
+          token = null;
+          sessionStorage.removeItem("token");
+          clearInterval(sessionTokenChecker);
+          loginDiv.style.display = "block";
+          dashboardDiv.style.display = "none";
+        }
+
+        function logoutWithMessage(msg) {
+          logoutCleanup();
+          showAlert(msg);
+        }
+
+        fetch(`/check_token`, {
+          headers: {
+            Authorization: `Bearer ${tokenInput}`,
+          },
+        })
+          .then((res) => {
+            if (res.status === 200) {
+              token = tokenInput;
+              sessionStorage.setItem("token", token);
+              loginMsg.textContent = "";
+              loginDiv.style.display = "none";
+              dashboardDiv.style.display = "block";
+              logConsole("Login successful!");
+              sessionTokenChecker = setInterval(() => {
+                fetch(`/check_token`, {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                })
+                  .then((res) => {
+                    if (res.status === 401) {
+                      logoutWithMessage(
+                        "Oturum tokeni geçersiz veya süresi dolmuş!"
+                      );
+                    } else if (res.status === 404) {
+                      logoutWithMessage("Oturum bulunamadı!");
+                    } else if (res.status === 429) {
+                      logoutWithMessage(
+                        "Çok fazla istek! Lütfen biraz bekleyin."
+                      );
+                      temporarilyDisableLogin(res.headers.get("Retry-After"));
+                    } else if (res.status == 500) {
+                      logoutWithMessage(
+                        "Sunucu hatası sebebiyle oturumunuz kapatılıyor"
+                      );
+                    } else if (res.status === 403) {
+                      logoutWithMessage("Oturumunuz kapatıldı!");
+                      loginMsg.textContent = "Yasaklandınız!";
+                      document.getElementById("tokenInput").disabled = true;
+                      document.getElementById("tokenInput").value = "";
+                      document.querySelector("#login button").disabled = true;
+                    }
+                  })
+                  .catch((err) => {
+                    if (navigator.onLine) {
+                      logoutWithMessage(
+                        "Sunucu kapatıldı, oturum kapatılıyor."
+                      );
+                      logConsole("Token check failed: " + err.message, true);
+                    } else {
+                      logConsole(
+                        "Token check failed (offline): " + err.message,
+                        true
+                      );
+                    }
+                  });
+              }, 10000);
+            } else if (res.status === 404) {
+              loginMsg.textContent = "Yanlış Oturum!";
+              logConsole(
+                "Undefined Behavior: Token Status 404: Not Found. Session is invalid or expired.",
+                true
+              );
+            } else if (res.status === 429) {
+              loginMsg.textContent = "Çok fazla istek!";
+            } else if (res.status === 401) {
+              loginMsg.textContent = "Geçersiz token!";
+            } else if (res.status === 500) {
+              loginMsg.textContent = "Sunucu hatası!";
+            } else if (res.status === 403) {
+              sessionStorage.setItem("token", token);
+              loginMsg.textContent = "Yasaklandınız!";
+              document.getElementById("tokenInput").disabled = true;
+              document.getElementById("tokenInput").value = "";
+              document.querySelector("#login button").disabled = true;
+            } else if (res.status === 423) {
+              sessionStorage.setItem("token", token);
+              temporarilyDisableLogin(res.headers.get("Retry-After"));
+            }
+          })
+          .catch((err) => {
+            loginMsg.textContent = "Bağlantı hatası!";
+            logConsole("Login failed: " + err.message, true);
+          });
+      }
+
+      function temporarilyDisableLogin(seconds) {
+        const input = document.getElementById("tokenInput");
+        const btn = document.querySelector("#login button");
+        const status = document.getElementById("loginMsg");
+
+        input.disabled = true;
+        btn.disabled = true;
+
+        let remaining = seconds;
+        status.textContent = `Çok fazla deneme yapıldı, lütfen ${remaining} saniye bekleyin.`;
+
+        const interval = setInterval(() => {
+          remaining--;
+          status.textContent = `Çok fazla deneme yapıldı, lütfen ${remaining} saniye bekleyin.`;
+          if (remaining <= 0) {
+            clearInterval(interval);
+            input.disabled = false;
+            btn.disabled = false;
+            status.textContent = "";
+          }
+        }, 1000);
+      }
+
+      function logConsole(message, isError = false) {
+        const console = document
+          .getElementById("console")
+          .querySelector(".content");
+        const p = document.createElement("p");
+        p.textContent = message;
+        p.className = isError ? "error" : "success";
+        console.appendChild(p);
+        console.scrollTop = console.scrollHeight;
+        console.scrollTop = console.scrollHeight;
+        if (console.children.length > 100) {
+          console.removeChild(console.children[0]);
+        }
+      }
+
+      function showAlert(message) {
+        const alertBox = document.createElement("div");
+        alertBox.textContent = message;
+        alertBox.style.backgroundColor = "#f8d7da";
+        alertBox.style.position = "fixed";
+        alertBox.style.color = "#721c24";
+        alertBox.style.padding = "10px";
+        alertBox.style.borderRadius = "4px";
+        alertBox.style.marginTop = "10px";
+        alertBox.style.top = "10px";
+        alertBox.style.right = "10px";
+        alertBox.style.zIndex = "1000";
+        alertBox.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.1)";
+        alertBox.style.transition = "opacity 0.3s ease-in-out";
+        alertBox.style.opacity = "0";
+        document.body.appendChild(alertBox);
+        setTimeout(() => {
+          alertBox.style.opacity = "1";
+        }, 10);
+        setTimeout(() => {
+          document.body.removeChild(alertBox);
+        }, 3000);
+      }
+
+      function showSuccess(message) {
+        const alertBox = document.createElement("div");
+        alertBox.textContent = message;
+        alertBox.style.backgroundColor = "#d4edda";
+        alertBox.style.position = "fixed";
+        alertBox.style.color = "#155724";
+        alertBox.style.padding = "10px";
+        alertBox.style.borderRadius = "4px";
+        alertBox.style.marginTop = "10px";
+        alertBox.style.top = "10px";
+        alertBox.style.right = "10px";
+        alertBox.style.zIndex = "1000";
+        alertBox.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.1)";
+        alertBox.style.transition = "opacity 0.3s ease-in-out";
+        alertBox.style.opacity = "0";
+        document.body.appendChild(alertBox);
+        setTimeout(() => {
+          alertBox.style.opacity = "1";
+        }, 10);
+        setTimeout(() => {
+          document.body.removeChild(alertBox);
+        }, 3000);
+      }
+
+      function sendCmd(cmd) {
+        fetch(`/${cmd}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+          .then((res) => res.text())
+          .then((text) => logConsole(text))
+          .catch((err) => logConsole("Operation failed: " + err.message, true));
+      }
+
+      function runCommand(command) {
+        if (!command.trim()) {
+          logConsole("Command cannot be empty!", true);
+          return;
+        }
+
+        document.getElementById("commandOutput").innerHTML =
+          "<div class='loaderico'></div>";
+
+        fetch(`/run_command?command=${encodeURIComponent(command)}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.error) {
+              document.getElementById("commandOutput").innerHTML =
+                "<span style='color: red;'>" + data.output + "</span>";
+            } else {
+              document.getElementById("commandOutput").textContent =
+                data.output;
+            }
+          })
+          .catch((err) => {
+            document.getElementById("commandOutput").innerHTML =
+              "<span style='color: red;'>Failed for reason. Check console.</span>";
+            logConsole("Command execution failed: " + err.message, true);
+          });
+      }
+
+      function getDeviceInfo() {
+        logConsole("Getting device info...");
+        fetch(`/get_device_info`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            document.getElementById("systemInfo").innerHTML = "";
+            document.getElementById("hardwareInfo").innerHTML = "";
+            document.getElementById("storageInfo").innerHTML = "";
+            document.getElementById("pythonInfo").innerHTML = "";
+
+            const systemFields = [
+              "hostname",
+              "ip",
+              "user",
+              "system",
+              "release",
+              "version",
+              "uptime",
+              "last_boot",
+            ];
+            const hardwareFields = [
+              "cpu_count",
+              "cpu_freq",
+              "machine",
+              "processor",
+            ];
+            const storageFields = [
+              "memory_total",
+              "memory_used",
+              "memory_free",
+              "disk_total",
+              "disk_used",
+              "disk_free",
+            ];
+            const pythonFields = [
+              "python_version",
+              "python_platform",
+              "python_executable",
+              "python_implementation",
+              "python_build",
+              "python_compiler",
+              "python_architecture",
+            ];
+
+            for (const key in data) {
+              const p = document.createElement("p");
+              p.textContent = `${key}: ${data[key]}`;
+              if (systemFields.includes(key)) {
+                document.getElementById("systemInfo").appendChild(p);
+              } else if (hardwareFields.includes(key)) {
+                document.getElementById("hardwareInfo").appendChild(p);
+              } else if (storageFields.includes(key)) {
+                document.getElementById("storageInfo").appendChild(p);
+              } else if (pythonFields.includes(key)) {
+                document.getElementById("pythonInfo").appendChild(p);
+              }
+            }
+
+            document
+              .getElementById("deviceInfoModal")
+              .classList.remove("hidden");
+
+            document.body.style.overflow = "hidden";
+          })
+          .catch((err) => {
+            logConsole("Could not get device info: " + err.message, true);
+          });
+      }
+
+      function closeDeviceInfoModal() {
+        document.body.style.overflow = "auto";
+        document.getElementById("deviceInfoModal").classList.add("hidden");
+      }
+
+      function sendPopup(type, ontop) {
+        const msgElem = document.getElementById("popupMsg");
+
+        const msg = encodeURIComponent(msgElem.value);
+        fetch(`/popup?msg=${msg}&type=${type}&ontop=${ontop ? "1" : "0"}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+          .then((res) => res.text())
+          .then((text) => {
+            logConsole(text);
+          })
+          .catch((err) =>
+            logConsole("Message could not be sent: " + err.message, true)
+          );
+      }
+
+      function sendCreateFile() {
+        const path = document.getElementById("filePath").value.trim();
+        const filename = document.getElementById("fileName").value.trim();
+        const content = document.getElementById("fileContent").value;
+
+        if (!path || !filename) {
+          logConsole("File path and name cannot be empty!", true);
+          return;
+        }
+
+        fetch(`/create_file`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ path, filename, content }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.status === "ok") {
+              logConsole("File created: " + data.path);
+              document.getElementById("fileName").value = "";
+              document.getElementById("fileContent").value = "";
+            } else {
+              logConsole("Error: " + data.message, true);
+            }
+          })
+          .catch((err) =>
+            logConsole("Could not create file: " + err.message, true)
+          );
+      }
+
+      function stopServer() {
+        fetch(`/stop`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+          .then((res) => res.text())
+          .then((text) => {
+            if (text == "Unauthorized") {
+              logConsole("Unauthorized", true);
+              return;
+            }
+            logConsole(text);
+            document.getElementById("stopServerBtn").disabled = true;
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          });
+      }
+
+      function restartServer() {
+        fetch(`/restart`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+          .then((res) => res.text())
+          .then((text) => {
+            if (text == "Unauthorized") {
+              logConsole("Unauthorized", true);
+              return;
+            }
+            logConsole(text);
+            document.getElementById("restartServerBtn").disabled = true;
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          });
+      }
+
+      document
+        .getElementById("tokenInput")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter") checkToken();
+        });
+
+      document.getElementById("login").style.display = "block";
+
+      class ConsoleManager {
+        constructor() {
+          this.console = document.getElementById("console");
+          this.isDragging = false;
+          this.currentX = 0;
+          this.currentY = 0;
+          this.initialX = 0;
+          this.initialY = 0;
+          this.xOffset = 0;
+          this.yOffset = 0;
+          this.lastX = 0;
+          this.lastY = 0;
+          this.setupEventListeners();
+        }
+
+        setupEventListeners() {
+          document.addEventListener("mousedown", this.onDragStart.bind(this));
+          document.addEventListener("mousemove", this.onDrag.bind(this));
+          document.addEventListener("mouseup", this.onDragEnd.bind(this));
+          document.addEventListener("touchstart", this.onDragStart.bind(this));
+          document.addEventListener("touchmove", this.onDrag.bind(this));
+          document.addEventListener("touchend", this.onDragEnd.bind(this));
+        }
+
+        toggleConsoleMode() {
+          const consoleElement = this.console;
+          const toggleButton = document.getElementById("setAbsolute");
+
+          if (consoleElement.classList.contains("draggable")) {
+            consoleElement.classList.remove("draggable");
+            toggleButton.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#495057">
+        <rect x="3" y="5" width="18" height="14" rx="2" ry="2" stroke="#495057" stroke-width="2" fill="none"/>
+        <path d="M12 2v8" stroke="#495057" stroke-width="2" stroke-linecap="round"/>
+        <path d="M9 7l3 3 3-3" fill="none" stroke="#495057" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      `;
+            consoleElement.style.transform = "";
+            consoleElement.style.bottom = "";
+            consoleElement.style.right = "";
+          } else {
+            consoleElement.classList.add("draggable");
+            toggleButton.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#495057">
+        <rect x="3" y="5" width="18" height="14" rx="2" ry="2" stroke="#495057" stroke-width="2" fill="none"/>
+        <path d="M12 22v-8" stroke="#495057" stroke-width="2" stroke-linecap="round"/>
+        <path d="M15 17l-3-3-3 3" fill="none" stroke="#495057" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      `;
+            consoleElement.style.transform = `translate(${this.lastX}px, ${this.lastY}px)`;
+          }
+        }
+
+        onDragStart(e) {
+          if (!this.console.classList.contains("draggable")) return;
+
+          if (e.type === "touchstart") {
+            this.initialX = e.touches[0].clientX - this.xOffset;
+            this.initialY = e.touches[0].clientY - this.yOffset;
+          } else {
+            this.initialX = e.clientX - this.xOffset;
+            this.initialY = e.clientY - this.yOffset;
+          }
+
+          if (
+            e.target === document.getElementById("console") ||
+            e.target ==
+              document.getElementById("console").querySelector(".content")
+          ) {
+            this.isDragging = true;
+          }
+        }
+
+        onDrag(e) {
+          if (!this.isDragging) return;
+          e.preventDefault();
+
+          if (e.type === "touchmove") {
+            this.currentX = e.touches[0].clientX - this.initialX;
+            this.currentY = e.touches[0].clientY - this.initialY;
+          } else {
+            this.currentX = e.clientX - this.initialX;
+            this.currentY = e.clientY - this.initialY;
+          }
+
+          this.xOffset = this.currentX;
+          this.yOffset = this.currentY;
+
+          this.console.style.transform = `translate(${this.currentX}px, ${this.currentY}px)`;
+          this.lastX = this.currentX;
+          this.lastY = this.currentY;
+        }
+
+        onDragEnd() {
+          this.initialX = this.currentX;
+          this.initialY = this.currentY;
+          this.isDragging = false;
+        }
+
+        clearConsole() {
+          while (this.console.firstChild) {
+            this.console.removeChild(this.console.firstChild);
+          }
+        }
+      }
+
+      const consoleManager = new ConsoleManager();
+
+      function setConsoleAbsolute() {
+        consoleManager.toggleConsoleMode();
+      }
+    </script>
+
+    <footer class="footer">
+      Powered by
+      <span
+        ><a href="https://github.com/EnbloxC3/RemoteContol/" target="_blank"
+          >RemoteControl</a
+        ></span
+      >
+    </footer>
+  </body>
+</html>
